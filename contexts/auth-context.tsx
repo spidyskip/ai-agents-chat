@@ -38,7 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
             apiClient.enableMockMode()
           } else {
-            setUser(null)
+            setUser({
+              id: "mock-user",
+              username: "Developer",
+              email: "dev@example.com",
+              isAuthenticated: false,
+            })
           }
         }
       } catch (error) {
