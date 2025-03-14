@@ -40,7 +40,7 @@ export default function MessageItem({ message, isLastMessage = false }: MessageI
         {!isUser && (
           <Avatar className={`${isUser ? "ml-2" : "mr-2"} flex-shrink-0`}>
             <AvatarFallback>AI</AvatarFallback>
-            <AvatarImage src="/placeholder.svg?height=40&width=40" />
+            <AvatarImage src="/single-person-2.png?height=40&width=40" />
           </Avatar>
         )}
 
@@ -69,7 +69,7 @@ export default function MessageItem({ message, isLastMessage = false }: MessageI
           <Avatar className={`${isUser ? "mr-2" : "ml-2"} flex-shrink-0`}>
             <AvatarFallback>U</AvatarFallback>
             <AvatarImage
-              src={message.user_info?.avatar || "/placeholder.svg?height=40&width=40"}
+              src={message.user_info?.avatar || "/single-person-1.png?height=40&width=40"}
               alt={message.user_info?.username || "User"}
             />
           </Avatar>

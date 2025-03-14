@@ -86,7 +86,7 @@ export default function Home() {
   const fetchConversations = useCallback(async () => {
     if (offlineMode) {
       console.log("Skipping conversation fetch in offline mode")
-      const { data } = await apiClient.getConversations()
+      const { data, error } = await apiClient.getConversations('mock-user')
       if (data) {
         setConversations(data)
       }
@@ -95,8 +95,8 @@ export default function Home() {
 
     try {
       console.log("Fetching conversations...")
-      const { data, error } = await apiClient.getConversations()
-
+      const { data, error } = await apiClient.getConversations(user?.id)
+      
       if (error) {
         console.error("Error fetching conversations:", error)
         throw new Error(error)
@@ -117,7 +117,7 @@ export default function Home() {
 
       // If we're in offline mode, use mock conversations
       if (offlineMode) {
-        const { data } = await apiClient.getConversations()
+        const { data } = await apiClient.getConversations("mock-user")
         if (data) {
           setConversations(data)
         }

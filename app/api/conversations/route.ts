@@ -58,6 +58,7 @@ export async function GET() {
         {
           id: "mock-conv-1",
           agent_id: "mock-agent-1",
+          user_id: "mock-user",
           title: "Mock Conversation 1",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

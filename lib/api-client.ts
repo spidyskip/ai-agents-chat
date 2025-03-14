@@ -151,7 +151,7 @@ class ApiClient {
     }
 
     // Conversations endpoints
-    if (endpoint === "/conversations" && method === "GET") {
+    if (endpoint.startsWith("/conversations?user_id") && method === "GET") {
       return {
         data: [
           {
@@ -186,6 +186,7 @@ class ApiClient {
           id,
           agent_id: "mock-agent-1",
           title: "Mock Conversation",
+          user_id: "mock-user",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           messages: [
@@ -315,15 +316,15 @@ class ApiClient {
   }
 
   // Conversation methods
-  async getConversations(): Promise<ApiResponse<Conversation[]>> {
-    return this.request<Conversation[]>("/conversations")
+  async getConversations(userId: string): Promise<ApiResponse<Conversation[]>> {
+    return this.request<Conversation[]>(`/conversations?user_id=${userId}`)
   }
 
   async getConversation(id: string): Promise<ApiResponse<Conversation>> {
     return this.request<Conversation>(`/conversations/${id}`)
   }
 
-  async createConversation(data: { agent_id: string; title?: string }): Promise<ApiResponse<Conversation>> {
+  async createConversation(data: { agent_id: string; title?: string , user_id: string}): Promise<ApiResponse<Conversation>> {
     return this.request<Conversation>("/conversations", "POST", data)
   }
 

@@ -171,7 +171,7 @@ export default function ChatInterfaceDirect({
                   {message.role !== "user" && (
                     <Avatar className="mr-2">
                       <AvatarFallback>AI</AvatarFallback>
-                      <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                      <AvatarImage src="/single-person-2.png?height=40&width=40" />
                     </Avatar>
                   )}
                   <div
@@ -184,7 +184,7 @@ export default function ChatInterfaceDirect({
                   {message.role === "user" && (
                     <Avatar className="ml-2">
                       <AvatarFallback>U</AvatarFallback>
-                      <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                      <AvatarImage src="/single-person-1.png?height=40&width=40" />
                     </Avatar>
                   )}
                 </div>

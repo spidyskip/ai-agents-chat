@@ -1,3 +1,4 @@
+// filepath: c:\Users\anton\Projects\ai-chat-interface\contexts\auth-context.tsx
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
@@ -38,12 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
             apiClient.enableMockMode()
           } else {
-            setUser({
-              id: "mock-user",
-              username: "Developer",
-              email: "dev@example.com",
-              isAuthenticated: false,
-            })
+            setUser(null)
           }
         }
       } catch (error) {
@@ -142,4 +138,3 @@ export function useAuth() {
   }
   return context
 }
-

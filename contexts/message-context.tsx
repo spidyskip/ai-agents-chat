@@ -83,7 +83,7 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const loadMessages = useCallback(
     async (conversationId: string) => {
       setIsLoading(true)
-
+      
       try {
         const fetchedMessages = await messageService.getMessages(conversationId)
         setMessages(messageService.formatMessagesForDisplay(fetchedMessages))
