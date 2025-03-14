@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server"
+import { useAuth } from "../../../contexts/auth-context"
+
 
 // Get API URL from environment variable with fallback
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export async function GET() {
+  const { user } = useAuth()
+
+  if (!user) {
+    throw new Error("User is not authenticated")
+  }
+
+  const apiRequest = {
+    user_id: user.id
+  }
   console.log(`Attempting to fetch conversations from: ${API_URL}/conversations`)
 
   try {
@@ -16,6 +27,7 @@ export async function GET() {
       headers: {
         Accept: "application/json",
       },
+      body: JSON.stringify(apiRequest),
     })
 
     clearTimeout(timeoutId)
