@@ -7,13 +7,12 @@ export interface Agent {
   categories?: string[]
   keywords?: string[]
   additional_query?: any
-  document_refs?: any
+  document_refs?: Record<string, string[]>
 }
 
 export interface Conversation {
   id: string
   agent_id: string
-  user_id?: string
   title: string
   created_at: string
   updated_at: string
@@ -23,11 +22,38 @@ export interface Conversation {
 export interface Message {
   id: string
   conversation_id: string
-  role: "user" | "assistant" | "system" // Include system role but filter it out in UI
+  role: "user" | "assistant" | "system"
   content: string
   created_at: string
   user_id?: string
-  user_info?: Record<string, any>
+  user_info?: {
+    username?: string
+    avatar?: string
+  }
+}
+
+export interface LoginCredentials {
+  username?: string
+  password?: string
+}
+
+export interface RegisterData {
+  username?: string
+  email?: string
+  password?: string
+}
+
+export interface ChatRequest {
+  query: string
+  agent_id?: string
+  thread_id?: string
+  user_id?: string
+  user_info?: {
+    username?: string
+    preferences?: any
+  }
+  include_history?: boolean
+  include_documents?: boolean
 }
 
 export interface User {
@@ -36,41 +62,19 @@ export interface User {
   email: string
   avatar?: string
   isAuthenticated: boolean
-  preferences?: UserPreferences
-}
-
-export interface UserPreferences {
-  theme?: string
-  language?: string
-  notifications?: boolean
-  [key: string]: any
-}
-
-export interface LoginCredentials {
-  username: string
-  password: string
-}
-
-export interface RegisterData extends LoginCredentials {
-  email: string
-}
-
-export interface ChatRequest {
-  query: string
-  agent_id?: string
-  thread_id?: string
-  user_id?: string
-  user_info?: Record<string, any>
-  additional_prompts?: Record<string, any>
-  include_history?: boolean
-  include_documents?: boolean
-}
-
-export interface ChatResponse {
-  response: string
-  agent_id: string
-  agent_name: string
-  thread_id: string
-  confidence: number
+  preferences?: {
+    theme?: string
+    language?: string
+    emailNotifications?: boolean
+    pushNotifications?: boolean
+    messageNotifications?: boolean
+    twoFactorEnabled?: boolean
+    sessionTimeout?: string
+  }
+  fullName?: string
+  bio?: string
+  location?: string
+  website?: string
+  auth0Id?: string
 }
 

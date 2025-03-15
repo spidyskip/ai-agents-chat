@@ -19,11 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Edit } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import apiClient from "@/lib/api-client"
+import AgentDocumentReferences from "@/components/agent-document-references"
 import type { Agent } from "@/lib/types"
 
 export default function AgentsPage() {
@@ -35,6 +37,7 @@ export default function AgentsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [activeTab, setActiveTab] = useState("details")
 
   // Form state
   const [formData, setFormData] = useState({
@@ -198,6 +201,12 @@ export default function AgentsPage() {
       categories: agent.categories?.join(", ") || "",
       keywords: agent.keywords?.join(", ") || "",
     })
+    setActiveTab("details")
+  }
+
+  const handleAgentUpdate = (updatedAgent: Agent) => {
+    setAgents((prev) => prev.map((agent) => (agent.agent_id === updatedAgent.agent_id ? updatedAgent : agent)))
+    setSelectedAgent(updatedAgent)
   }
 
   if (authLoading || isLoading) {
@@ -258,7 +267,6 @@ export default function AgentsPage() {
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
                       <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                       <SelectItem value="gpt-4">GPT-4</SelectItem>
                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
@@ -325,6 +333,7 @@ export default function AgentsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead>Categories</TableHead>
+                  <TableHead>Documents</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -343,92 +352,126 @@ export default function AgentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {agent.document_refs ? (
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(agent.document_refs).map(([category, docIds]) => (
+                            <Badge
+                              key={category}
+                              variant="outline"
+                              className="bg-blue-50 text-blue-800 border-blue-200"
+                            >
+                              {category}: {docIds.includes("*") ? "All" : docIds.length}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="icon" onClick={() => handleEditClick(agent)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[600px]">
+                        <DialogContent className="sm:max-w-[800px]">
                           <DialogHeader>
-                            <DialogTitle>Edit Agent</DialogTitle>
-                            <DialogDescription>Update the agent's configuration.</DialogDescription>
+                            <DialogTitle>Edit Agent: {agent.name}</DialogTitle>
+                            <DialogDescription>
+                              Update the agent's configuration and document references.
+                            </DialogDescription>
                           </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="edit-name" className="text-right">
-                                Name
-                              </Label>
-                              <Input
-                                id="edit-name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="edit-model" className="text-right">
-                                Model
-                              </Label>
-                              <Select
-                                value={formData.model_name}
-                                onValueChange={(value) => setFormData({ ...formData, model_name: value })}
-                              >
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue placeholder="Select a model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
-                                  <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                                  <SelectItem value="gpt-4">GPT-4</SelectItem>
-                                  <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="edit-categories" className="text-right">
-                                Categories
-                              </Label>
-                              <Input
-                                id="edit-categories"
-                                value={formData.categories}
-                                onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
-                                placeholder="General, Programming, etc. (comma separated)"
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="edit-keywords" className="text-right">
-                                Keywords
-                              </Label>
-                              <Input
-                                id="edit-keywords"
-                                value={formData.keywords}
-                                onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
-                                placeholder="help, code, etc. (comma separated)"
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-start gap-4">
-                              <Label htmlFor="edit-prompt" className="text-right">
-                                Prompt
-                              </Label>
-                              <Textarea
-                                id="edit-prompt"
-                                value={formData.prompt}
-                                onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                                placeholder="Enter the system prompt for this agent"
-                                className="col-span-3"
-                                rows={5}
-                              />
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button type="submit" onClick={handleUpdateAgent} disabled={isEditing}>
-                              {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                              Update Agent
-                            </Button>
-                          </DialogFooter>
+
+                          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="details">Agent Details</TabsTrigger>
+                              <TabsTrigger value="documents">Document References</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="details" className="mt-4">
+                              <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="edit-name" className="text-right">
+                                    Name
+                                  </Label>
+                                  <Input
+                                    id="edit-name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="col-span-3"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="edit-model" className="text-right">
+                                    Model
+                                  </Label>
+                                  <Select
+                                    value={formData.model_name}
+                                    onValueChange={(value) => setFormData({ ...formData, model_name: value })}
+                                  >
+                                    <SelectTrigger className="col-span-3">
+                                      <SelectValue placeholder="Select a model" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                                      <SelectItem value="gpt-4">GPT-4</SelectItem>
+                                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="edit-categories" className="text-right">
+                                    Categories
+                                  </Label>
+                                  <Input
+                                    id="edit-categories"
+                                    value={formData.categories}
+                                    onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
+                                    placeholder="General, Programming, etc. (comma separated)"
+                                    className="col-span-3"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <Label htmlFor="edit-keywords" className="text-right">
+                                    Keywords
+                                  </Label>
+                                  <Input
+                                    id="edit-keywords"
+                                    value={formData.keywords}
+                                    onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                                    placeholder="help, code, etc. (comma separated)"
+                                    className="col-span-3"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-4 items-start gap-4">
+                                  <Label htmlFor="edit-prompt" className="text-right">
+                                    Prompt
+                                  </Label>
+                                  <Textarea
+                                    id="edit-prompt"
+                                    value={formData.prompt}
+                                    onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                                    placeholder="Enter the system prompt for this agent"
+                                    className="col-span-3"
+                                    rows={5}
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end">
+                                <Button type="submit" onClick={handleUpdateAgent} disabled={isEditing}>
+                                  {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                  Update Agent
+                                </Button>
+                              </div>
+                            </TabsContent>
+
+                            <TabsContent value="documents" className="mt-4">
+                              {selectedAgent && (
+                                <AgentDocumentReferences agent={selectedAgent} onUpdate={handleAgentUpdate} />
+                              )}
+                            </TabsContent>
+                          </Tabs>
                         </DialogContent>
                       </Dialog>
                     </TableCell>
@@ -436,7 +479,7 @@ export default function AgentsPage() {
                 ))}
                 {agents.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                       No agents found. Create your first agent to get started.
                     </TableCell>
                   </TableRow>

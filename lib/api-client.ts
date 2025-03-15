@@ -278,6 +278,39 @@ class ApiClient {
       }
     }
 
+    // Add this to the getMockResponse method for document endpoints
+    if (endpoint === "/documents" && method === "GET") {
+      return {
+        data: [
+          {
+            id: "doc-1",
+            title: "Company Policies",
+            content: "This document outlines the company policies...",
+            category: "knowledge",
+            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "doc-2",
+            title: "Product Documentation",
+            content: "User guide for our main product...",
+            category: "reference",
+            created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "doc-3",
+            title: "Coding Standards",
+            content: "Our team's coding standards and best practices...",
+            category: "instructions",
+            created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        ] as unknown as T,
+        error: null,
+      }
+    }
+
     // Default fallback
     return {
       data: null,
@@ -347,12 +380,30 @@ class ApiClient {
   }
 
   // Auth methods
+  // async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
+  //   const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
+  //   if (response.data?.token) {
+  //     this.setToken(response.data.token)
+  //   }
+  //   return response
+  // }
+
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
-    if (response.data?.token) {
-      this.setToken(response.data.token)
+    console.log("Mocking login...");
+  
+    if (credentials.username === "admin" && credentials.password === "admin") {
+      // Mock user object
+      const user = { id: "1", username: "admin", role: "admin", email: "admin@example.com", isAuthenticated: true };
+      const token = "mock-admin-token"; // Static mock token
+  
+      // Save token in local storage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+  
+      return { data: { user, token }, error: null };
     }
-    return response
+  
+    return { data: null, error: "Invalid credentials. Only admin can log in." };
   }
 
   async register(data: RegisterData): Promise<ApiResponse<{ user: User; token: string }>> {
@@ -374,9 +425,30 @@ class ApiClient {
     return this.request<User>("/auth/me")
   }
 
-  // Add methods for document management
+  // Add these methods to the ApiClient class
   async getDocuments(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/documents")
+  }
+
+  async getDocument(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/${id}`)
+  }
+
+  async createDocument(documentData: {
+    title: string
+    content: string
+    category?: string
+    metadata?: Record<string, any>
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>("/documents", "POST", documentData)
+  }
+
+  async updateDocument(id: string, data: Partial<any>): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/${id}`, "PATCH", data)
+  }
+
+  async deleteDocument(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/${id}`, "DELETE")
   }
 }
 

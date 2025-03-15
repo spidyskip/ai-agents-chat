@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import LoginForm from "@/components/login-form"
@@ -11,6 +11,16 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login")
   const router = useRouter()
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
+  if (user) {
+    return null;
+  }
 
   // If user is already logged in, redirect to home
   if (user) {
