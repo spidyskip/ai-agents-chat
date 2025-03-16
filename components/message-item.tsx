@@ -111,7 +111,7 @@ export default function MessageItem({ message, isLastMessage = false, agent, ava
             <Avatar className="h-8 w-8">
               <AvatarFallback>U</AvatarFallback>
               <AvatarImage
-                src={message.user_info?.avatar || "/placeholder.svg?height=40&width=40"}
+                src={message.user_info?.avatar || "/avatars/young-woman.svg?height=40&width=40"}
                 alt={message.user_info?.username || "User"}
               />
             </Avatar>
