@@ -19,7 +19,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="relative">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user.avatar || "/placeholder.svg?height=96&width=96"} alt={user.username} />
+              <AvatarImage src={user.avatar || "/avatars/young-woman.svg?height=96&width=96"} alt={user.username} />
               <AvatarFallback className="text-2xl">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <Button

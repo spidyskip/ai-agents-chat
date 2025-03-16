@@ -5,7 +5,7 @@ class MessageService {
   /**
    * Send a message to the chat API
    */
-  async sendMessage(content: string, conversationId: string, agentId: string, user: User): Promise<Message | null> {
+  async sendMessage(content: string, conversationId: string, agent: Agent | null, user: User): Promise<Message | null> {
     try {
       // Prepare user info from user object
       const userInfo = {
@@ -16,7 +16,6 @@ class MessageService {
       // Create chat request with user ID automatically included
       const chatRequest: ChatRequest = {
         query: content,
-        agent_id: agentId,
         thread_id: conversationId,
         user_id: user.id, // Automatically use the logged-in user's ID
         user_info: userInfo,
@@ -24,6 +23,12 @@ class MessageService {
         include_documents: true,
       }
 
+      // Only include agent_id if an agent is specified
+      // If agent is null, the backend will choose the appropriate agent
+      if (agent) {
+        chatRequest.agent_id = agent.agent_id
+      }
+      console.log(chatRequest)
       // Send the request to the API
       const { data, error } = await apiClient.chat(chatRequest)
 
@@ -50,6 +55,8 @@ class MessageService {
         role: "assistant",
         content: data.response,
         created_at: new Date().toISOString(),
+        agent_id: data.agent_id, // Store the agent_id that responded
+        name: data.agent_name, // Store the agent name that responded
       }
 
       // Store messages in the conversation
@@ -61,13 +68,6 @@ class MessageService {
       console.error("Error in sendMessage:", error)
       return null
     }
-  }
-
-  /**
-   * Send a message to a specific agent
-   */
-  async sendMessageToAgent(content: string, conversationId: string, agent: Agent, user: User): Promise<Message | null> {
-    return this.sendMessage(content, conversationId, agent.agent_id, user)
   }
 
   /**

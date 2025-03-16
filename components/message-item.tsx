@@ -5,14 +5,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Copy, Check } from "lucide-react"
-import type { Message } from "@/lib/types"
+import type { Message, Agent } from "@/lib/types"
+import { AgentAvatar } from "./agent-avatar"
 
 interface MessageItemProps {
   message: Message
   isLastMessage?: boolean
+  agent?: Agent | null
+  availableAgents?: Agent[]
 }
 
-export default function MessageItem({ message, isLastMessage = false }: MessageItemProps) {
+export default function MessageItem({ message, isLastMessage = false, agent, availableAgents = [] }: MessageItemProps) {
   const [copied, setCopied] = useState(false)
 
   // Skip rendering system messages
@@ -21,6 +24,12 @@ export default function MessageItem({ message, isLastMessage = false }: MessageI
   }
 
   const isUser = message.role === "user"
+
+  // Find the agent for this message if it has an agent_id
+  const messageAgent =
+    message.agent_id && availableAgents.length > 0
+      ? availableAgents.find((a) => a.agent_id === message.agent_id) || null
+      : agent
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(message.content)
@@ -38,13 +47,17 @@ export default function MessageItem({ message, isLastMessage = false }: MessageI
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 group`}>
       <div className={`flex items-start max-w-[80%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
         {!isUser && (
-          <Avatar className={`${isUser ? "ml-2" : "mr-2"} flex-shrink-0`}>
-            <AvatarFallback>AI</AvatarFallback>
-            <AvatarImage src="/single-person-2.png?height=40&width=40" />
-          </Avatar>
+          <div className={`${isUser ? "ml-2" : "mr-2"} flex-shrink-0`}>
+            <AgentAvatar agent={messageAgent} size="sm" />
+          </div>
         )}
 
         <Card className={`p-3 relative ${isUser ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+          {!isUser && (
+            <div className="text-xs font-medium mb-1 text-muted-foreground">
+              {message.agent_name || messageAgent?.name || "Assistant"}
+            </div>
+          )}
           <div className="mb-1">{message.content}</div>
 
           <div
@@ -66,13 +79,15 @@ export default function MessageItem({ message, isLastMessage = false }: MessageI
         </Card>
 
         {isUser && (
-          <Avatar className={`${isUser ? "mr-2" : "ml-2"} flex-shrink-0`}>
-            <AvatarFallback>U</AvatarFallback>
-            <AvatarImage
-              src={message.user_info?.avatar || "/single-person-1.png?height=40&width=40"}
-              alt={message.user_info?.username || "User"}
-            />
-          </Avatar>
+          <div className={`${isUser ? "mr-2" : "ml-2"} flex-shrink-0`}>
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage
+                src={message.user_info?.avatar || "/avatars/young-woman.svg?height=40&width=40"}
+                alt={message.user_info?.username || "User"}
+              />
+            </Avatar>
+          </div>
         )}
       </div>
     </div>

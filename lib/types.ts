@@ -26,6 +26,8 @@ export interface Message {
   content: string
   created_at: string
   user_id?: string
+  name?: string
+  agent_id?: string
   user_info?: {
     username?: string
     avatar?: string
@@ -46,6 +48,7 @@ export interface RegisterData {
 export interface ChatRequest {
   query: string
   agent_id?: string
+  name?: string
   thread_id?: string
   user_id?: string
   user_info?: {

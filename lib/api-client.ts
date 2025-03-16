@@ -434,6 +434,10 @@ class ApiClient {
     return this.request<any>(`/documents/${id}`)
   }
 
+  async getDocumentsCategories(): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/categories`)
+  }
+
   async createDocument(documentData: {
     title: string
     content: string

@@ -62,7 +62,6 @@ export default function ChatInterfaceDirect({
     setInput("")
     setError(null)
     setIsLoading(true)
-
     try {
       // Send the message to the backend API
       const { data, error } = await apiClient.chat({

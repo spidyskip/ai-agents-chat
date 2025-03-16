@@ -1,25 +1,10 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { File, Upload, Trash2, Search, FileText, Loader2, FolderPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// filepath: c:\Users\anton\Projects\ai-chat-interface\components\document-management.tsx
+import { useState, useEffect } from "react"
+import { FileText, Upload, Trash2, Search, Loader2, FolderPlus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -28,223 +13,257 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import apiClient from '@/lib/api-client';
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
+import apiClient from "@/lib/api-client"
 
 interface Document {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  metadata?: Record<string, any>;
+  id: string
+  title: string
+  content: string
+  category: string
+  created_at: string
+  updated_at: string
+  metadata?: Record<string, any>
 }
 
 export default function DocumentManagement() {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+  const [showAddDialog, setShowAddDialog] = useState(false)
   const [newDocument, setNewDocument] = useState({
-    title: '',
-    content: '',
-    category: 'general',
-  });
-  const { toast } = useToast();
+    title: "",
+    content: "",
+    category: "general",
+  })
+  const { toast } = useToast()
 
-  // Fetch documents on component mount
+  // Fetch documents and categories on component mount
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    fetchCategories()
+    fetchDocuments()
+  }, [])
 
-  const fetchDocuments = async () => {
-    setIsLoading(true);
+  const fetchCategories = async () => {
     try {
-      const { data, error } = await apiClient.getDocuments();
-      
-      if (error) {
-        throw new Error(error);
+      const response = await apiClient.getDocumentsCategories()
+      if (response.error) {
+        throw new Error(response.error)
       }
-      
-      if (data) {
-        setDocuments(data);
+      setCategories(response.data || [])
+
+      // Set default category if available
+      if (response.data?.length > 0 && !newDocument.category) {
+        setNewDocument((prev) => ({ ...prev, category: response.data[0] }))
       }
     } catch (error) {
-      console.error('Error fetching documents:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load documents',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching categories:", error)
+      // Use default categories if API fails
+      const defaultCategories = ["general", "knowledge", "instructions", "reference"]
+      setCategories(defaultCategories)
     }
-  };
+  }
+
+  const fetchDocuments = async () => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient.getDocuments()
+      if (response.error) {
+        throw new Error(response.error)
+      }
+      setDocuments(response.data || [])
+    } catch (error) {
+      console.error("Error fetching documents:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load documents",
+        variant: "destructive",
+      })
+      // Set empty documents array if API fails
+      setDocuments([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleAddDocument = async () => {
-    if (!newDocument.title || !newDocument.content) {
+    if (!newDocument.title || !newDocument.content || !newDocument.category) {
       toast({
-        title: 'Validation Error',
-        description: 'Title and content are required',
-        variant: 'destructive',
-      });
-      return;
+        title: "Validation Error",
+        description: "Title, content, and category are required",
+        variant: "destructive",
+      })
+      return
     }
-    
-    setIsUploading(true);
-    
+
+    setIsUploading(true)
+
     try {
-      const { data, error } = await apiClient.createDocument({
+      const response = await apiClient.createDocument({
         title: newDocument.title,
         content: newDocument.content,
         category: newDocument.category,
-      });
-      
-      if (error) {
-        throw new Error(error);
-      }
-      
-      if (data) {
-        setDocuments(prev => [...prev, data]);
-        setNewDocument({
-          title: '',
-          content: '',
-          category: 'general',
-        });
-        setShowAddDialog(false);
-        
-        toast({
-          title: 'Document Added',
-          description: 'Document has been successfully added',
-        });
-      }
-    } catch (error) {
-      console.error('Error adding document:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add document',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+      })
 
-  const handleDeleteDocument = async (id: string) => {
-    try {
-      const { error } = await apiClient.deleteDocument(id);
-      
-      if (error) {
-        throw new Error(error);
+      if (response.error) {
+        throw new Error(response.error)
       }
-      
-      setDocuments(prev => prev.filter(doc => doc.id !== id));
-      
+
+      setDocuments((prev) => [response.data, ...prev])
+
+      setNewDocument({
+        title: "",
+        content: "",
+        category: newDocument.category, // Keep the same category for next document
+      })
+
+      setShowAddDialog(false)
+
       toast({
-        title: 'Document Deleted',
-        description: 'Document has been successfully deleted',
-      });
+        title: "Document Added",
+        description: "Document has been successfully added",
+      })
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error("Error adding document:", error)
       toast({
-        title: 'Error',
-        description: 'Failed to delete document',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to add document",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
     }
-  };
+  }
+
+  const handleDeleteDocument = async (document: Document) => {
+    try {
+      const response = await apiClient.deleteDocument(document.id)
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      setDocuments((prev) => prev.filter((doc) => doc.id !== document.id))
+
+      toast({
+        title: "Document Deleted",
+        description: "Document has been successfully deleted",
+      })
+    } catch (error) {
+      console.error("Error deleting document:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      })
+    }
+  }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    setIsUploading(true);
-    
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+
     try {
       // Read file content
-      const content = await readFileContent(file);
-      
+      const content = await readFileContent(file)
+
       // Create document with file content
-      const { data, error } = await apiClient.createDocument({
+      const response = await apiClient.createDocument({
         title: file.name,
         content,
-        category: 'uploaded',
-      });
-      
-      if (error) {
-        throw new Error(error);
+        category: newDocument.category || "general",
+      })
+
+      if (response.error) {
+        throw new Error(response.error)
       }
-      
-      if (data) {
-        setDocuments(prev => [...prev, data]);
-        
-        toast({
-          title: 'File Uploaded',
-          description: 'File has been successfully uploaded and converted to a document',
-        });
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
+
+      setDocuments((prev) => [response.data, ...prev])
+
       toast({
-        title: 'Error',
-        description: 'Failed to upload file',
-        variant: 'destructive',
-      });
+        title: "File Uploaded",
+        description: "File has been successfully uploaded and converted to a document",
+      })
+    } catch (error) {
+      console.error("Error uploading file:", error)
+      toast({
+        title: "Error",
+        description: "Failed to upload file",
+        variant: "destructive",
+      })
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
       // Reset file input
-      event.target.value = '';
+      event.target.value = ""
     }
-  };
+  }
 
   const readFileContent = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
+      const reader = new FileReader()
+
       reader.onload = (event) => {
-        resolve(event.target?.result as string);
-      };
-      
+        resolve(event.target?.result as string)
+      }
+
       reader.onerror = (error) => {
-        reject(error);
-      };
-      
-      reader.readAsText(file);
-    });
-  };
+        reject(error)
+      }
+
+      reader.readAsText(file)
+    })
+  }
 
   // Filter documents based on search query
-  const filteredDocuments = documents.filter(doc => 
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDocuments = documents.filter(
+    (doc) =>
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.category.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  // Get category badge color
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "work":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case "personal":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "research":
+        return "bg-purple-100 text-purple-800 border-purple-200"
+      case "notes":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "knowledge":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200"
+      case "instructions":
+        return "bg-pink-100 text-pink-800 border-pink-200"
+      case "reference":
+        return "bg-orange-100 text-orange-800 border-orange-200"
+      case "general":
+        return "bg-gray-100 text-gray-800 border-gray-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Document Management</CardTitle>
-          <CardDescription>
-            Upload, create, and manage documents for your AI agents to use
-          </CardDescription>
+          <CardDescription>Upload, create, and manage documents for your AI agents to use</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -268,9 +287,7 @@ export default function DocumentManagement() {
                 <DialogContent className="sm:max-w-[600px]">
                   <DialogHeader>
                     <DialogTitle>Create New Document</DialogTitle>
-                    <DialogDescription>
-                      Add a new document that can be used by AI agents
-                    </DialogDescription>
+                    <DialogDescription>Add a new document that can be used by AI agents</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -296,10 +313,20 @@ export default function DocumentManagement() {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="knowledge">Knowledge Base</SelectItem>
-                          <SelectItem value="instructions">Instructions</SelectItem>
-                          <SelectItem value="reference">Reference</SelectItem>
+                          {categories.length > 0 ? (
+                            categories.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <>
+                              <SelectItem value="general">General</SelectItem>
+                              <SelectItem value="knowledge">Knowledge Base</SelectItem>
+                              <SelectItem value="instructions">Instructions</SelectItem>
+                              <SelectItem value="reference">Reference</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -325,7 +352,7 @@ export default function DocumentManagement() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              
+
               <div className="relative">
                 <input
                   type="file"
@@ -341,7 +368,7 @@ export default function DocumentManagement() {
               </div>
             </div>
           </div>
-          
+
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -366,15 +393,13 @@ export default function DocumentManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{doc.category}</Badge>
+                      <Badge variant="outline" className={getCategoryColor(doc.category)}>
+                        {doc.category}
+                      </Badge>
                     </TableCell>
                     <TableCell>{formatDate(doc.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
@@ -384,11 +409,13 @@ export default function DocumentManagement() {
             </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? 'No documents match your search' : 'No documents found. Add your first document to get started.'}
+              {searchQuery
+                ? "No documents match your search"
+                : "No documents found. Add your first document to get started."}
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

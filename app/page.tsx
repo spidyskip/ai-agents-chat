@@ -7,7 +7,7 @@ import Header from "@/components/header"
 import AgentSelector from "@/components/agent-selector"
 import ConversationList from "@/components/conversation-list"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Menu, AlertTriangle, RefreshCw } from "lucide-react"
+import { PlusCircle, Menu, AlertTriangle, RefreshCw, MessageSquareShare } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-mobile"
 import Notification from "@/components/notification"
 import { useToast } from "@/hooks/use-toast"
@@ -166,7 +166,7 @@ export default function Home() {
     try {
       const { data, error } = await apiClient.createConversation({
         agent_id: selectedAgent.agent_id,
-        title: `New conversation with ${selectedAgent.name}`,
+        title: `New Conversation`,
         user_id: user?.id, // Add user ID to the conversation
       })
 
@@ -349,10 +349,10 @@ export default function Home() {
         {/* Sidebar Toggle for Mobile */}
         {isMobile && (
           <button
-            className="fixed top-20 left-4 z-50 p-2 bg-primary text-primary-foreground rounded-full"
+            className="fixed top-11 left-4 z-50 p-2 bg-primary text-primary-foreground rounded-full"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            <Menu size={24} />
+            <MessageSquareShare size={25} />
           </button>
         )}
 
