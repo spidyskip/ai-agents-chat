@@ -49,6 +49,13 @@ export default function EnhancedChatInterface({
     }
   }, [selectedAgent])
 
+  // Update activeAgentId when conversation changes
+  useEffect(() => {
+    if (conversation?.agent_id) {
+      setActiveAgentId(conversation.agent_id)
+    }
+  }, [conversation])
+
   // Load messages when conversation changes
   useEffect(() => {
     if (conversation?.id) {
@@ -136,8 +143,8 @@ export default function EnhancedChatInterface({
 
   return (
     <Card className="flex flex-col h-full border-0 rounded-none">
-      <CardHeader className="border-b flex flex-row items-center justify-between">
-        <div className="flex items-center">
+      <CardHeader className="border-b flex flex-col items-start justify-between">
+        <div className="flex items-center justify-between w-full">
           <CardTitle>{conversation?.title}</CardTitle>
           {offlineMode && (
             <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 border-yellow-300">
@@ -146,7 +153,7 @@ export default function EnhancedChatInterface({
             </Badge>
           )}
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 w-full mt-2">
           {/* Agent selector */}
           {availableAgents.length > 1 && (
             <Select value={activeAgentId} onValueChange={setActiveAgentId}>
@@ -172,7 +179,7 @@ export default function EnhancedChatInterface({
               </SelectContent>
             </Select>
           )}
-
+  
           {conversation && <ExportButton conversation={conversation} messages={messages} />}
           {activeAgentId !== "multi" && (
             <AgentInfo agent={availableAgents.find(a => a.agent_id === activeAgentId) || null} />
@@ -186,7 +193,7 @@ export default function EnhancedChatInterface({
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
+  
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -221,7 +228,7 @@ export default function EnhancedChatInterface({
             className="flex-1"
             disabled={isLoading || !conversation}
           />
-
+  
           <Button type="submit" disabled={isLoading || !input.trim() || !conversation}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

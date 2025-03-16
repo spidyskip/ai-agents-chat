@@ -267,6 +267,7 @@ export default function AgentsPage() {
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
                       <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                       <SelectItem value="gpt-4">GPT-4</SelectItem>
                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
@@ -414,6 +415,7 @@ export default function AgentsPage() {
                                       <SelectValue placeholder="Select a model" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                      <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
                                       <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                                       <SelectItem value="gpt-4">GPT-4</SelectItem>
                                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
