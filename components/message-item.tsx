@@ -5,6 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Copy, Check } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import type { Message, Agent } from "@/lib/types"
 import { AgentAvatar } from "./agent-avatar"
 
@@ -58,7 +61,32 @@ export default function MessageItem({ message, isLastMessage = false, agent, ava
               {message.agent_name || messageAgent?.name || "Assistant"}
             </div>
           )}
-          <div className="mb-1">{message.content}</div>
+
+          {/* Render message content as Markdown for assistant messages */}
+          {isUser ? (
+            <div className="mb-1">{message.content}</div>
+          ) : (
+            <div className="mb-1 markdown-content">
+              <ReactMarkdown
+                components={{
+                  code({ node, inline, className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || "")
+                    return !inline && match ? (
+                      <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" {...props}>
+                        {String(children).replace(/\n$/, "")}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    )
+                  },
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          )}
 
           <div
             className={`text-xs ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"} flex justify-between items-center mt-1`}
@@ -83,7 +111,7 @@ export default function MessageItem({ message, isLastMessage = false, agent, ava
             <Avatar className="h-8 w-8">
               <AvatarFallback>U</AvatarFallback>
               <AvatarImage
-                src={message.user_info?.avatar || "/avatars/young-woman.svg?height=40&width=40"}
+                src={message.user_info?.avatar || "/placeholder.svg?height=40&width=40"}
                 alt={message.user_info?.username || "User"}
               />
             </Avatar>

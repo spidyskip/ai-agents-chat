@@ -1,11 +1,17 @@
-'use client'
+// filepath: c:\Users\anton\Projects\ai-chat-interface\components\theme-provider.tsx
+"use client"
 
-import * as React from 'react'
-import {
-  ThemeProvider as NextThemesProvider,
-  type ThemeProviderProps,
-} from 'next-themes'
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { ReactNode } from "react"
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+interface ThemeProviderProps {
+  children: ReactNode
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  return (
+    <NextThemesProvider attribute="class">
+      {children}
+    </NextThemesProvider>
+  )
 }

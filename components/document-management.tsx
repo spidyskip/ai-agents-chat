@@ -1,6 +1,9 @@
-// filepath: c:\Users\anton\Projects\ai-chat-interface\components\document-management.tsx
-import { useState, useEffect } from "react"
-import { FileText, Upload, Trash2, Search, Loader2, FolderPlus } from "lucide-react"
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
+import { FileText, Upload, Trash2, Search, Loader2, FolderPlus, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,13 +39,17 @@ export default function DocumentManagement() {
   const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [isUploading, setIsUploading] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [newDocument, setNewDocument] = useState({
     title: "",
     content: "",
     category: "general",
   })
+  const [uploadCategory, setUploadCategory] = useState("general")
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   // Fetch documents and categories on component mount
@@ -56,8 +63,9 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocumentsCategories()
       if (response.error) {
         throw new Error(response.error)
+
       }
-      setCategories(response.data || [])
+      setCategories(response.data.categories || [])
 
       // Set default category if available
       if (response.data?.length > 0 && !newDocument.category) {
@@ -77,6 +85,7 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocuments()
       if (response.error) {
         throw new Error(response.error)
+
       }
       setDocuments(response.data || [])
     } catch (error) {
@@ -107,16 +116,16 @@ export default function DocumentManagement() {
 
     try {
       const response = await apiClient.createDocument({
-        title: newDocument.title,
-        content: newDocument.content,
-        category: newDocument.category,
+            title: newDocument.title,
+            content: newDocument.content,
       })
 
-      if (response.error) {
-        throw new Error(response.error)
+      if (!response.ok) {
+        throw new Error(`Failed to add document: ${response.status}`)
       }
 
-      setDocuments((prev) => [response.data, ...prev])
+      const data = await response.json()
+      setDocuments((prev) => [data, ...prev])
 
       setNewDocument({
         title: "",
@@ -179,7 +188,7 @@ export default function DocumentManagement() {
       const response = await apiClient.createDocument({
         title: file.name,
         content,
-        category: newDocument.category || "general",
+        category: uploadCategory || "general",
       })
 
       if (response.error) {
@@ -192,6 +201,8 @@ export default function DocumentManagement() {
         title: "File Uploaded",
         description: "File has been successfully uploaded and converted to a document",
       })
+
+      setShowUploadDialog(false)
     } catch (error) {
       console.error("Error uploading file:", error)
       toast({
@@ -202,7 +213,9 @@ export default function DocumentManagement() {
     } finally {
       setIsUploading(false)
       // Reset file input
-      event.target.value = ""
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
@@ -222,12 +235,15 @@ export default function DocumentManagement() {
     })
   }
 
-  // Filter documents based on search query
-  const filteredDocuments = documents.filter(
-    (doc) =>
+  // Filter documents based on search query and selected category
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch =
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.category.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      doc.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory
+
+    return matchesSearch && matchesCategory
+  })
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -277,6 +293,25 @@ export default function DocumentManagement() {
               />
             </div>
             <div className="flex gap-2">
+              {/* Category filter */}
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <div className="flex items-center">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Filter by category" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Create document button */}
               <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                 <DialogTrigger asChild>
                   <Button>
@@ -353,19 +388,58 @@ export default function DocumentManagement() {
                 </DialogContent>
               </Dialog>
 
-              <div className="relative">
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                  onChange={handleFileUpload}
-                  accept=".txt,.md,.json,.csv"
-                />
-                <Button variant="outline">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload File
-                </Button>
-              </div>
+              {/* Upload file button with category selection */}
+              <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload File
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Upload Document</DialogTitle>
+                    <DialogDescription>Upload a file and select a category for it</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="upload-category" className="text-right">
+                        Category
+                      </Label>
+                      <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="file-upload" className="text-right">
+                        File
+                      </Label>
+                      <Input
+                        ref={fileInputRef}
+                        id="file-upload"
+                        type="file"
+                        accept=".txt,.md,.json,.csv"
+                        className="col-span-3"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                      Cancel
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -409,8 +483,8 @@ export default function DocumentManagement() {
             </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery
-                ? "No documents match your search"
+              {searchQuery || selectedCategory !== "all"
+                ? "No documents match your search criteria"
                 : "No documents found. Add your first document to get started."}
             </div>
           )}
@@ -419,3 +493,4 @@ export default function DocumentManagement() {
     </div>
   )
 }
+
