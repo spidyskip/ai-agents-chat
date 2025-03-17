@@ -16,6 +16,18 @@ import apiClient from "@/lib/api-client"
 // Import the enhanced chat interface
 import EnhancedChatInterface from "@/components/enhanced-chat-interface"
 
+// Add these imports at the top with the other imports
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+
 // Types
 import type { Agent, Conversation } from "@/lib/types"
 
@@ -33,6 +45,10 @@ export default function Home() {
   const { toast } = useToast()
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
+
+  // Add these state variables inside the Home component
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [newConversationTitle, setNewConversationTitle] = useState("")
 
   // Redirect to auth page if not logged in
   useEffect(() => {
@@ -159,39 +175,55 @@ export default function Home() {
     }
   }, [isMobile])
 
-  // Create a new conversation - use useCallback to avoid recreation on every render
-  const createConversation = useCallback(async () => {
-    if (!selectedAgent) return
+  // Replace the existing createConversation function with this updated version
+  const createConversation = useCallback(
+    async (customTitle?: string) => {
+      try {
+        // If no custom title is provided and dialog is not shown yet, show the dialog
+        if (!customTitle && !showCreateDialog) {
+          setShowCreateDialog(true)
+          return
+        }
 
-    try {
-      const { data, error } = await apiClient.createConversation({
-        agent_id: selectedAgent.agent_id,
-        title: `New Conversation`,
-        user_id: user?.id, // Add user ID to the conversation
-      })
+        // Close dialog if it was open
+        setShowCreateDialog(false)
 
-      if (error) {
-        throw new Error(error)
-      }
+        // Use the provided title or the one from state
+        const title = customTitle || newConversationTitle || (selectedAgent ? selectedAgent.name : "New Conversation")
 
-      if (data) {
-        setConversations((prev) => [...prev, data])
-        setCurrentConversation(data)
+        // Reset the title input
+        setNewConversationTitle("")
 
+        const { data, error } = await apiClient.createConversation({
+          agent_id: selectedAgent?.agent_id, // This can be null/undefined if no agent is selected
+          title: title,
+          user_id: user?.id,
+        })
+
+        if (error) {
+          throw new Error(error)
+        }
+
+        if (data) {
+          setConversations((prev) => [...prev, data])
+          setCurrentConversation(data)
+
+          toast({
+            title: "Conversation created",
+            description: `Started a new conversation${selectedAgent ? ` with ${selectedAgent.name}` : ""}`,
+          })
+        }
+      } catch (error) {
+        console.error("Error creating conversation:", error)
         toast({
-          title: "Conversation created",
-          description: `Started a new conversation with ${selectedAgent.name}`,
+          title: "Error",
+          description: "Failed to create conversation",
+          variant: "destructive",
         })
       }
-    } catch (error) {
-      console.error("Error creating conversation:", error)
-      toast({
-        title: "Error",
-        description: "Failed to create conversation",
-        variant: "destructive",
-      })
-    }
-  }, [selectedAgent, toast, user])
+    },
+    [selectedAgent, toast, user, showCreateDialog, newConversationTitle],
+  )
 
   // Select a conversation - use useCallback to avoid recreation on every render
   const selectConversation = useCallback(
@@ -373,7 +405,7 @@ export default function Home() {
             <div className="flex-1 overflow-y-auto p-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Conversations</h2>
-                <Button size="sm" onClick={createConversation} disabled={!selectedAgent} variant="outline">
+                <Button size="sm" onClick={() => createConversation()} variant="outline">
                   <PlusCircle size={16} className="mr-1" />
                   New
                 </Button>
@@ -416,6 +448,37 @@ export default function Home() {
           onSelectConversation={selectConversation}
         />
       </div>
+      {/* Conversation Creation Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Conversation</DialogTitle>
+            <DialogDescription>
+              {selectedAgent ? `Start a new conversation with ${selectedAgent.name}` : "Start a new conversation"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="conversation-name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="conversation-name"
+                value={newConversationTitle}
+                onChange={(e) => setNewConversationTitle(e.target.value)}
+                placeholder={selectedAgent ? selectedAgent.name : "New Conversation"}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => createConversation(newConversationTitle)}>
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+

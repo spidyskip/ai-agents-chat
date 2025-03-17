@@ -12,6 +12,7 @@ const agentAvatarMap: Record<string, string> = {
   "math": "/avatars/young-professor.svg",
   "writing": "/avatars/agent-writing.png",
   "science": "/avatars/doctor-woman.svg",
+  "doctor": "/avatars/doctor-woman.svg"
 }
 
 interface AgentAvatarProps {

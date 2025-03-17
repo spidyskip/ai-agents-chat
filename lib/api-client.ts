@@ -170,7 +170,7 @@ class ApiClient {
       return {
         data: {
           id: `mock-conv-${Date.now()}`,
-          agent_id: body.agent_id,
+          agent_id: body.agent_id || null,
           title: body.title || "New Conversation",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -357,7 +357,9 @@ class ApiClient {
     return this.request<Conversation>(`/conversations/${id}`)
   }
 
-  async createConversation(data: { agent_id: string; title?: string , user_id: string}): Promise<ApiResponse<Conversation>> {
+  async createConversation(data: { agent_id?: string; title?: string; user_id?: string }): Promise<
+    ApiResponse<Conversation>
+  > {
     return this.request<Conversation>("/conversations", "POST", data)
   }
 
@@ -380,30 +382,12 @@ class ApiClient {
   }
 
   // Auth methods
-  // async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
-  //   const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
-  //   if (response.data?.token) {
-  //     this.setToken(response.data.token)
-  //   }
-  //   return response
-  // }
-
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
-    console.log("Mocking login...");
-  
-    if (credentials.username === "admin" && credentials.password === "admin") {
-      // Mock user object
-      const user = { id: "1", username: "admin", role: "admin", email: "admin@example.com", isAuthenticated: true };
-      const token = "mock-admin-token"; // Static mock token
-  
-      // Save token in local storage
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-  
-      return { data: { user, token }, error: null };
+    const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
+    if (response.data?.token) {
+      this.setToken(response.data.token)
     }
-  
-    return { data: null, error: "Invalid credentials. Only admin can log in." };
+    return response
   }
 
   async register(data: RegisterData): Promise<ApiResponse<{ user: User; token: string }>> {
@@ -434,10 +418,6 @@ class ApiClient {
     return this.request<any>(`/documents/${id}`)
   }
 
-  async getDocumentsCategories(): Promise<ApiResponse<any>> {
-    return this.request<any>(`/documents/categories`)
-  }
-
   async createDocument(documentData: {
     title: string
     content: string
@@ -453,6 +433,16 @@ class ApiClient {
 
   async deleteDocument(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/documents/${id}`, "DELETE")
+  }
+
+  async authenticateWithAuth0(data: {
+    auth0Id: string
+    email: string
+    name: string
+    picture: string
+    token: string
+  }): Promise<ApiResponse<User>> {
+    return this.request<User>("/auth/auth0", "POST", data)
   }
 }
 

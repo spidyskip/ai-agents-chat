@@ -94,6 +94,7 @@ export default function AgentsPage() {
     try {
       const { data, error } = await apiClient.createAgent({
         name: formData.name,
+        agent_id: formData.name.toLowerCase().replace(/\s/g, "-"),
         prompt: formData.prompt,
         model_name: formData.model_name,
         categories: formData.categories
