@@ -310,137 +310,138 @@ export default function DocumentManagement() {
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Create document button */}
-              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    Create Document
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Document</DialogTitle>
-                    <DialogDescription>Add a new document that can be used by AI agents</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="title" className="text-right">
-                        Title
-                      </Label>
-                      <Input
-                        id="title"
-                        value={newDocument.title}
-                        onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="category" className="text-right">
-                        Category
-                      </Label>
-                      <Select
-                        value={newDocument.category}
-                        onValueChange={(value) => setNewDocument({ ...newDocument, category: value })}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.length > 0 ? (
-                            categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <>
-                              <SelectItem value="general">General</SelectItem>
-                              <SelectItem value="knowledge">Knowledge Base</SelectItem>
-                              <SelectItem value="instructions">Instructions</SelectItem>
-                              <SelectItem value="reference">Reference</SelectItem>
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="content" className="text-right">
-                        Content
-                      </Label>
-                      <Textarea
-                        id="content"
-                        value={newDocument.content}
-                        onChange={(e) => setNewDocument({ ...newDocument, content: e.target.value })}
-                        placeholder="Enter document content"
-                        className="col-span-3"
-                        rows={10}
-                      />
-                    </div>
+            </div>
+          </div>
+          <div className="flex gap-2 mb-6">
+            {/* Create document button */}
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  Create Document
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Document</DialogTitle>
+                  <DialogDescription>Add a new document that can be used by AI agents</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="title" className="text-right">
+                      Title
+                    </Label>
+                    <Input
+                      id="title"
+                      value={newDocument.title}
+                      onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
-                  <DialogFooter>
-                    <Button type="submit" onClick={handleAddDocument} disabled={isUploading}>
-                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Add Document
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              {/* Upload file button with category selection */}
-              <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload File
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                    <DialogDescription>Upload a file and select a category for it</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="upload-category" className="text-right">
-                        Category
-                      </Label>
-                      <Select value={uploadCategory} onValueChange={setUploadCategory}>
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category" className="text-right">
+                      Category
+                    </Label>
+                    <Select
+                      value={newDocument.category}
+                      onValueChange={(value) => setNewDocument({ ...newDocument, category: value })}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.length > 0 ? (
+                          categories.map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="file-upload" className="text-right">
-                        File
-                      </Label>
-                      <Input
-                        ref={fileInputRef}
-                        id="file-upload"
-                        type="file"
-                        accept=".txt,.md,.json,.csv"
-                        className="col-span-3"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="knowledge">Knowledge Base</SelectItem>
+                            <SelectItem value="instructions">Instructions</SelectItem>
+                            <SelectItem value="reference">Reference</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-                      Cancel
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="content" className="text-right">
+                      Content
+                    </Label>
+                    <Textarea
+                      id="content"
+                      value={newDocument.content}
+                      onChange={(e) => setNewDocument({ ...newDocument, content: e.target.value })}
+                      placeholder="Enter document content"
+                      className="col-span-3"
+                      rows={10}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" onClick={handleAddDocument} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Add Document
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Upload file button with category selection */}
+            <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload File
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Document</DialogTitle>
+                  <DialogDescription>Upload a file and select a category for it</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="upload-category" className="text-right">
+                      Category
+                    </Label>
+                    <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="file-upload" className="text-right">
+                      File
+                    </Label>
+                    <Input
+                      ref={fileInputRef}
+                      id="file-upload"
+                      type="file"
+                      accept=".txt,.md,.json,.csv"
+                      className="col-span-3"
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {isLoading ? (
@@ -493,4 +494,3 @@ export default function DocumentManagement() {
     </div>
   )
 }
-

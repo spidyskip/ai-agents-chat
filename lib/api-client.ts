@@ -311,6 +311,21 @@ class ApiClient {
       }
     }
 
+    // Add these cases inside the getMockResponse method
+    if (endpoint.startsWith("/conversations/") && method === "DELETE") {
+      return {
+        data: { success: true },
+        error: null,
+      } as ApiResponse<T>
+    }
+
+    if (endpoint.startsWith("/agents/") && method === "DELETE") {
+      return {
+        data: { success: true },
+        error: null,
+      } as ApiResponse<T>
+    }
+
     // Default fallback
     return {
       data: null,
@@ -348,6 +363,12 @@ class ApiClient {
     return this.request<Agent>(`/agents/${id}`, "PATCH", data)
   }
 
+  // Add this method after the updateAgent method
+
+  async deleteAgent(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/agents/${id}`, "DELETE")
+  }
+
   // Conversation methods
   async getConversations(userId: string): Promise<ApiResponse<Conversation[]>> {
     return this.request<Conversation[]>(`/conversations?user_id=${userId}`)
@@ -365,6 +386,12 @@ class ApiClient {
 
   async updateConversation(id: string, data: Partial<Conversation>): Promise<ApiResponse<Conversation>> {
     return this.request<Conversation>(`/conversations/${id}`, "PATCH", data)
+  }
+
+  // Add these methods to the ApiClient class after the updateConversation method
+
+  async deleteConversation(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/conversations/${id}`, "DELETE")
   }
 
   // Message methods
@@ -429,6 +456,10 @@ class ApiClient {
 
   async updateDocument(id: string, data: Partial<any>): Promise<ApiResponse<any>> {
     return this.request<any>(`/documents/${id}`, "PATCH", data)
+  }
+  
+  async getDocumentsCategories(): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/categories`)
   }
 
   async deleteDocument(id: string): Promise<ApiResponse<any>> {

@@ -291,6 +291,42 @@ export default function Home() {
     [toast],
   )
 
+  // Add the deleteConversation function after the renameConversation function
+
+  // Delete a conversation - use useCallback to avoid recreation on every render
+  const deleteConversation = useCallback(
+    async (id: string) => {
+      try {
+        const { error } = await apiClient.deleteConversation(id)
+
+        if (error) {
+          throw new Error(error)
+        }
+
+        // Update the conversations list
+        setConversations((prev) => prev.filter((conv) => conv.id !== id))
+
+        // If the deleted conversation is the current one, clear it
+        if (currentConversation?.id === id) {
+          setCurrentConversation(null)
+        }
+
+        toast({
+          title: "Conversation deleted",
+          description: "The conversation has been permanently deleted.",
+        })
+      } catch (error) {
+        console.error("Error deleting conversation:", error)
+        toast({
+          title: "Error",
+          description: "Failed to delete conversation",
+          variant: "destructive",
+        })
+      }
+    },
+    [currentConversation, toast],
+  )
+
   // Retry connection to API
   const retryConnection = async () => {
     setApiError(null)
@@ -410,11 +446,13 @@ export default function Home() {
                   New
                 </Button>
               </div>
+              {/* Update the ConversationList component in the return statement to pass the deleteConversation function */}
               <ConversationList
                 conversations={conversations}
                 currentConversation={currentConversation}
                 onSelectConversation={selectConversation}
                 onRenameConversation={renameConversation}
+                onDeleteConversation={deleteConversation}
               />
             </div>
           </div>

@@ -1,3 +1,4 @@
+// filepath: c:\Users\anton\Projects\ai-chat-interface\components\agent-document-references.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -319,61 +320,13 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
           </div>
         )}
 
-        {/* Category selection section */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : filteredDocuments.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]"></TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead className="hidden sm:table-cell">Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDocuments.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={!!selectedDocuments[doc.id]}
-                        onCheckedChange={() => toggleDocumentSelection(doc.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <FileText className="mr-2 h-4 w-4 text-primary" />
-                        <span className="truncate max-w-[150px] sm:max-w-none">{doc.title}</span>
-                      </div>
-                      {/* Show category on mobile only */}
-                      <div className="sm:hidden mt-1">
-                        <Badge variant="outline" className={getCategoryColor(doc.category)}>
-                          {doc.category}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant="outline" className={getCategoryColor(doc.category)}>
-                        {doc.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{formatDate(doc.created_at)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchQuery || selectedCategory !== "all"
-              ? "No documents match your search criteria"
-              : "No documents found. Add documents in the document management section."}
-          </div>
-        )}
+        {/* Save button */}
+        <div className="mt-8 flex justify-end">
+          <Button onClick={handleSaveDocumentReferences} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save Document References
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

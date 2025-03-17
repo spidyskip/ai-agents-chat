@@ -6,13 +6,15 @@ import type { Agent } from "@/lib/types"
 // Map of agent types to avatar images
 const agentAvatarMap: Record<string, string> = {
   "general": "/avatars/inegneer.svg",
-  "programming": "/avatars/agent-code.png",
-  "creative": "/avatars/agent-creative.png",
+  "programming": "/avatars/software-developer-green.svg",
+  "creative": "/avatars/artist-avatar.svg",
   "coach": "/avatars/young-men.svg",
   "math": "/avatars/young-professor.svg",
   "writing": "/avatars/agent-writing.png",
-  "science": "/avatars/doctor-woman.svg",
-  "doctor": "/avatars/doctor-woman.svg"
+  "science": "/avatars/scientist-avatar-green.svg",
+  "doctor": "/avatars/doctor-woman.svg",
+  "nutrition": "/avatars/woman-avatar-avatar.svg",
+  "dpms": "/avatars/dpms.png"
 }
 
 interface AgentAvatarProps {
