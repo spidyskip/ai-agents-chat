@@ -409,12 +409,31 @@ class ApiClient {
   }
 
   // Auth methods
+   // Auth methods
+  // async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
+  //   const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
+  //   if (response.data?.token) {
+  //     this.setToken(response.data.token)
+  //   }
+  //   return response
+  // }
+
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
-    if (response.data?.token) {
-      this.setToken(response.data.token)
+    console.log("Mocking login...");
+  
+    if (credentials.username === "admin" && credentials.password === "admin") {
+      // Mock user object
+      const user = { id: "1", username: "admin", role: "admin", email: "admin@example.com", isAuthenticated: true };
+      const token = "mock-admin-token"; // Static mock token
+  
+      // Save token in local storage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+  
+      return { data: { user, token }, error: null };
     }
-    return response
+  
+    return { data: null, error: "Invalid credentials. Only admin can log in." };
   }
 
   async register(data: RegisterData): Promise<ApiResponse<{ user: User; token: string }>> {
