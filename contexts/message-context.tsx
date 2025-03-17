@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 interface MessageContextType {
   messages: Message[]
   isLoading: boolean
-  sendMessage: (content: string, conversation: Conversation, agent?: Agent) => Promise<boolean>
+  sendMessage: (content: string, conversation: Conversation, agent?: Agent | null) => Promise<boolean>
   loadMessages: (conversationId: string) => Promise<void>
   clearMessages: () => void
 }
@@ -23,7 +23,7 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
 
   const sendMessage = useCallback(
-    async (content: string, conversation: Conversation, agent?: Agent): Promise<boolean> => {
+    async (content: string, conversation: Conversation, agent?: Agent | null): Promise<boolean> => {
       if (!user) {
         toast({
           title: "Authentication required",
@@ -52,10 +52,10 @@ export function MessageProvider({ children }: { children: ReactNode }) {
         setMessages((prev) => [...prev, tempUserMessage])
 
         // Use the specified agent if provided, otherwise use the conversation's agent_id
-        const agentId = agent ? agent.agent_id : conversation.agent_id
-
+        const agentId = agent ? agent.agent_id : null
+        
         // Send the message to the API
-        const assistantMessage = await messageService.sendMessage(content, conversation.id, agentId, user)
+        const assistantMessage = await messageService.sendMessage(content, conversation.id, agent, user)
 
         if (!assistantMessage) {
           throw new Error("Failed to get response from assistant")
@@ -83,7 +83,7 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const loadMessages = useCallback(
     async (conversationId: string) => {
       setIsLoading(true)
-      
+
       try {
         const fetchedMessages = await messageService.getMessages(conversationId)
         setMessages(messageService.formatMessagesForDisplay(fetchedMessages))
