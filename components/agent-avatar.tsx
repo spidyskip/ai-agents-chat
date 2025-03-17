@@ -13,7 +13,7 @@ const agentAvatarMap: Record<string, string> = {
   "writing": "/avatars/agent-writing.png",
   "science": "/avatars/scientist-avatar-green.svg",
   "doctor": "/avatars/doctor-woman.svg",
-  "nutrition": "/avatars/woman-avatar-avatar.svg",
+  "nutrition": "/avatars/woman-avatar-green.svg",
   "dpms": "/avatars/dpms.png"
 }
 
