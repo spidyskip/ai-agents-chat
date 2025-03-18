@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageSquare, FileText, User, Clock, Loader2, ChevronRight } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MessageSquare, FileText, User, Clock, Loader2, ChevronRight, Filter } from "lucide-react"
 import type { User as UserType } from "@/lib/types"
 
 interface Activity {
@@ -155,15 +155,21 @@ export default function ActivityTab({ user }: ActivityTabProps) {
         <CardDescription>Track your recent activities and interactions</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs value={activityType} onValueChange={setActivityType} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All Activity</TabsTrigger>
-            <TabsTrigger value="conversation">Conversations</TabsTrigger>
-            <TabsTrigger value="document">Documents</TabsTrigger>
-            <TabsTrigger value="login">Logins</TabsTrigger>
-            <TabsTrigger value="agent">Agents</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center space-x-4 mb-6">
+          <Filter className="h-5 w-5 text-muted-foreground" />
+          <Select value={activityType} onValueChange={setActivityType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Activity</SelectItem>
+              <SelectItem value="conversation">Conversations</SelectItem>
+              <SelectItem value="document">Documents</SelectItem>
+              <SelectItem value="login">Logins</SelectItem>
+              <SelectItem value="agent">Agents</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
@@ -203,4 +209,3 @@ export default function ActivityTab({ user }: ActivityTabProps) {
     </Card>
   )
 }
-
