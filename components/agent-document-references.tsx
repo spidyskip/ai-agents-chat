@@ -279,6 +279,45 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
           </div>
         </div>
 
+        {/* Category selection section */}
+        {categories.length > 0 && (
+          <div className="mt-8 border-t pt-6">
+            <h3 className="text-lg font-medium mb-4">Quick Category Selection</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {categories.map((category) => {
+                const docsInCategory = documents.filter((doc) => doc.category === category)
+                const selectedInCategory = docsInCategory.filter((doc) => selectedDocuments[doc.id]).length
+                const allSelected = selectedInCategory === docsInCategory.length && docsInCategory.length > 0
+                const someSelected = selectedInCategory > 0 && selectedInCategory < docsInCategory.length
+
+                return (
+                  <div key={category} className="flex items-center justify-between p-3 border rounded-md">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <Checkbox
+                        id={`category-${category}`}
+                        checked={allSelected}
+                        indeterminate={someSelected}
+                        onCheckedChange={(checked) => toggleCategorySelection(category, !!checked)}
+                      />
+                      <Label htmlFor={`category-${category}`} className="flex items-center overflow-hidden">
+                        <Badge variant="outline" className={`mr-2 ${getCategoryColor(category)} whitespace-nowrap`}>
+                          {category}
+                        </Badge>
+                        <span className="truncate">
+                          {docsInCategory.length} doc{docsInCategory.length !== 1 ? "s" : ""}
+                        </span>
+                      </Label>
+                    </div>
+                    <Badge variant="outline" className="whitespace-nowrap">
+                      {selectedInCategory}/{docsInCategory.length}
+                    </Badge>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Document selection section */}
         <div className="mt-8">
           <h3 className="text-lg font-medium mb-4">Select Documents</h3>
@@ -304,9 +343,6 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
                       <span className="flex-shrink-0 w-full max-w-[200px] truncate overflow-x-auto whitespace-nowrap">{doc.title}</span>
                     </Label>
                   </div>
-                  <Badge variant="outline" className="whitespace-nowrap">
-                    {formatDate(doc.created_at)}
-                  </Badge>
                 </div>
               ))}
             </div>
@@ -314,7 +350,6 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
             <div className="text-center py-8 text-muted-foreground">No documents found for the selected filter.</div>
           )}
         </div>
-      
 
         {/* Save button */}
         <div className="mt-8 flex justify-end">
