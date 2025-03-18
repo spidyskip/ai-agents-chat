@@ -54,9 +54,10 @@ export default function AgentsPage() {
   const [formData, setFormData] = useState({
     name: "",
     prompt: "",
-    model_name: "gpt-4o",
+    model_name: "gemini-2.0-flash",
     categories: "",
     keywords: "",
+    tools: ""
   })
 
   // Redirect to auth page if not logged in
@@ -116,7 +117,10 @@ export default function AgentsPage() {
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
-        tools: [],
+        tools: formData.tools
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean),
       })
 
       if (error) {
@@ -134,9 +138,10 @@ export default function AgentsPage() {
         setFormData({
           name: "",
           prompt: "",
-          model_name: "gpt-4o",
+          model_name: "gemini-2.0-flash",
           categories: "",
           keywords: "",
+          tools: ""
         })
       }
     } catch (error) {
@@ -168,6 +173,10 @@ export default function AgentsPage() {
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
+        tools: formData.tools
+          .split(",")
+          .map((k) => k.trim())
+          .filter(Boolean),
       })
 
       if (error) {
@@ -187,9 +196,10 @@ export default function AgentsPage() {
         setFormData({
           name: "",
           prompt: "",
-          model_name: "gpt-4o",
+          model_name: "gemini-2.0-flash",
           categories: "",
           keywords: "",
+          tools: "",
         })
       }
     } catch (error) {
@@ -212,6 +222,7 @@ export default function AgentsPage() {
       model_name: agent.model_name,
       categories: agent.categories?.join(", ") || "",
       keywords: agent.keywords?.join(", ") || "",
+      tools: agent.tools?.join(", ") || "",
     })
     setActiveTab("details")
   }
@@ -337,6 +348,18 @@ export default function AgentsPage() {
                     className="col-span-3"
                   />
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="keywords" className="text-right">
+                    Tools
+                  </Label>
+                  <Input
+                    id="tools"
+                    value={formData.tools}
+                    onChange={(e) => setFormData({ ...formData, tools: e.target.value })}
+                    placeholder="help, code, etc. (comma separated)"
+                    className="col-span-3"
+                  />
+                </div>
                 <div className="grid grid-cols-4 items-start gap-4">
                   <Label htmlFor="prompt" className="text-right">
                     Prompt
@@ -373,6 +396,7 @@ export default function AgentsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead>Categories</TableHead>
+                  <TableHead>Tools</TableHead>
                   <TableHead>Documents</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -387,6 +411,15 @@ export default function AgentsPage() {
                         {agent.categories?.map((category, index) => (
                           <Badge key={index} variant="secondary">
                             {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {agent.tools?.map((tools, index) => (
+                          <Badge key={index} variant="secondary">
+                            {tools}
                           </Badge>
                         ))}
                       </div>
@@ -480,6 +513,18 @@ export default function AgentsPage() {
                                       value={formData.keywords}
                                       onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
                                       placeholder="help, code, etc. (comma separated)"
+                                      className="col-span-3"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-tools" className="text-right">
+                                      Tools
+                                    </Label>
+                                    <Input
+                                      id="edit-tools"
+                                      value={formData.tools}
+                                      onChange={(e) => setFormData({ ...formData, tools: e.target.value })}
+                                      placeholder="search, calculator, etc. (comma separated)"
                                       className="col-span-3"
                                     />
                                   </div>
