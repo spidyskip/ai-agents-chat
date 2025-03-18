@@ -28,6 +28,7 @@ interface Document {
   title: string
   content: string
   category: string
+  content_length?: string
   created_at: string
   updated_at: string
   metadata?: Record<string, any>
@@ -248,6 +249,12 @@ export default function DocumentManagement() {
     return new Date(dateString).toLocaleDateString()
   }
 
+   // Convert bytes to megabytes
+   const formatBytesToMB = (bytes: string) => {
+    const mb = parseInt(bytes, 10) / (1024 * 1024)
+    return `${mb.toFixed(2)} MB`
+  }
+
   // Get category badge color
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
@@ -453,6 +460,7 @@ export default function DocumentManagement() {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>Size</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -471,6 +479,7 @@ export default function DocumentManagement() {
                           {doc.category}
                         </Badge>
                       </TableCell>
+                      <TableCell>{formatBytesToMB(doc.content_length)}</TableCell>
                       <TableCell>{formatDate(doc.created_at)}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>

@@ -17,6 +17,7 @@ interface Document {
   id: string
   title: string
   content: string
+  content_length: string
   category: string
   created_at: string
   updated_at: string
@@ -50,6 +51,7 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
     const initialSelection: Record<string, boolean> = {}
 
     documents.forEach((doc) => {
+      
       // Check if this document's category exists in documentRefs
       if (documentRefs[doc.category]) {
         // Check if this document is referenced (either by specific ID or wildcard)
@@ -68,7 +70,7 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
     setIsLoading(true)
     try {
       const { data, error } = await apiClient.getDocuments()
-
+      
       if (error) {
         throw new Error(error)
       }
@@ -220,6 +222,12 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
     return new Date(dateString).toLocaleDateString()
   }
 
+  // Convert bytes to megabytes
+  const formatBytesToMB = (bytes: string) => {
+    const mb = parseInt(bytes, 10) / (1024 * 1024)
+    return `${mb.toFixed(2)} MB`
+  }
+
   // Get category badge color
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
@@ -317,7 +325,7 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
             </div>
           </div>
         )}
-
+        
         {/* Document selection section */}
         <div className="mt-8">
           <h3 className="text-lg font-medium mb-4">Select Documents</h3>
@@ -343,6 +351,9 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
                       <span className="flex-shrink-0 w-full max-w-[200px] truncate overflow-x-auto whitespace-nowrap">{doc.title}</span>
                     </Label>
                   </div>
+                  <Badge variant="outline" className="whitespace-nowrap overflow-x-auto">
+                    {formatBytesToMB(doc.content_length)}
+                  </Badge>
                 </div>
               ))}
             </div>
