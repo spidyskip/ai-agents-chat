@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { FileText, Upload, Trash2, Search, Loader2, FolderPlus, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -63,7 +62,6 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocumentsCategories()
       if (response.error) {
         throw new Error(response.error)
-
       }
       setCategories(response.data.categories || [])
 
@@ -85,7 +83,6 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocuments()
       if (response.error) {
         throw new Error(response.error)
-
       }
       setDocuments(response.data || [])
     } catch (error) {
@@ -116,8 +113,9 @@ export default function DocumentManagement() {
 
     try {
       const response = await apiClient.createDocument({
-            title: newDocument.title,
-            content: newDocument.content,
+        title: newDocument.title,
+        content: newDocument.content,
+        category: newDocument.category,
       })
 
       if (!response.ok) {
@@ -449,39 +447,41 @@ export default function DocumentManagement() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredDocuments.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDocuments.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <FileText className="mr-2 h-4 w-4 text-primary" />
-                        {doc.title}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getCategoryColor(doc.category)}>
-                        {doc.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(doc.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredDocuments.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <FileText className="mr-2 h-4 w-4 text-primary" />
+                          {doc.title}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getCategoryColor(doc.category)}>
+                          {doc.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDate(doc.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery || selectedCategory !== "all"

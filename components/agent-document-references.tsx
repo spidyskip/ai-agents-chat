@@ -1,4 +1,3 @@
-// filepath: c:\Users\anton\Projects\ai-chat-interface\components\agent-document-references.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -250,7 +249,7 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
         <CardTitle>Document References</CardTitle>
         <CardDescription>Select documents that this agent can access for additional context</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-[60vh] overflow-y-auto">
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -320,13 +319,13 @@ export default function AgentDocumentReferences({ agent, onUpdate }: AgentDocume
           </div>
         )}
 
-        {/* Save button */}
+      {/* Save button */}
         <div className="mt-8 flex justify-end">
-          <Button onClick={handleSaveDocumentReferences} disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save Document References
-          </Button>
-        </div>
+        <Button onClick={handleSaveDocumentReferences} disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Document References
+        </Button>
+      </div>
       </CardContent>
     </Card>
   )
