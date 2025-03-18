@@ -551,9 +551,9 @@ export default function AgentsPage() {
                               </TabsContent>
 
                               <TabsContent value="documents" className="mt-4">
-                                {selectedAgent && (
-                                  <AgentDocumentReferences agent={selectedAgent} onUpdate={handleAgentUpdate} />
-                                )}
+                                  {selectedAgent && (
+                                    <AgentDocumentReferences agent={selectedAgent} onUpdate={handleAgentUpdate} />
+                                  )}
                               </TabsContent>
                             </Tabs>
                           </DialogContent>
