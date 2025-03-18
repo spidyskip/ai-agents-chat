@@ -89,12 +89,11 @@ class ApiClient {
       if (this.mockMode) {
         return this.getMockResponse<T>(endpoint, method, body)
       }
-
+      console.log("body", body)
       const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {
         method,
         body: body ? JSON.stringify(body) : undefined,
       })
-
       console.log(`API response status: ${response.status}`)
 
       if (!response.ok) {

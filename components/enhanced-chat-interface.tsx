@@ -181,8 +181,8 @@ export default function EnhancedChatInterface({
           )}
   
           {conversation && <ExportButton conversation={conversation} messages={messages} />}
-          {activeAgentId !== "multi" && (
-            <AgentInfo agent={availableAgents.find(a => a.agent_id === activeAgentId) || null} />
+          {activeAgentId !== "multi" && availableAgents.find(a => a.agent_id === activeAgentId) && (
+            <AgentInfo agent={availableAgents.find(a => a.agent_id === activeAgentId)!} />
           )}
         </div>
       </CardHeader>

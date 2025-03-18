@@ -119,4 +119,3 @@ class MessageService {
 // Create a singleton instance
 const messageService = new MessageService()
 export default messageService
-
