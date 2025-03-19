@@ -464,12 +464,15 @@ class ApiClient {
   }
 
   async createDocument(documentData: {
-    title: string
-    content: string
-    category?: string
-    metadata?: Record<string, any>
+    category: string
+    document: {
+      title: string
+      content: string
+      metadata?: Record<string, any>
+    }
   }): Promise<ApiResponse<any>> {
-    return this.request<any>("/documents", "POST", documentData)
+    const { category, document } = documentData
+    return this.request<any>(`/documents?category=${encodeURIComponent(category)}`, "POST", document)
   }
 
   async updateDocument(id: string, data: Partial<any>): Promise<ApiResponse<any>> {

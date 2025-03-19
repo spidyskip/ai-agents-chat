@@ -44,9 +44,12 @@ export default function DocumentManagement() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [newDocument, setNewDocument] = useState({
-    title: "",
-    content: "",
     category: "general",
+    document: {
+      title: "",
+      content: "",
+      metadata: {}, // Add any metadata if needed
+    },
   })
   const [uploadCategory, setUploadCategory] = useState("general")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -114,9 +117,12 @@ export default function DocumentManagement() {
 
     try {
       const response = await apiClient.createDocument({
-        title: newDocument.title,
-        content: newDocument.content,
         category: newDocument.category,
+        document: {
+          title: newDocument.title,
+          content: newDocument.content,
+          metadata: {}, 
+        }
       })
 
       if (!response.ok) {
