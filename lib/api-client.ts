@@ -89,12 +89,11 @@ class ApiClient {
       if (this.mockMode) {
         return this.getMockResponse<T>(endpoint, method, body)
       }
-
+      console.log("body", body)
       const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {
         method,
         body: body ? JSON.stringify(body) : undefined,
       })
-
       console.log(`API response status: ${response.status}`)
 
       if (!response.ok) {
@@ -170,7 +169,7 @@ class ApiClient {
       return {
         data: {
           id: `mock-conv-${Date.now()}`,
-          agent_id: body.agent_id,
+          agent_id: body.agent_id || null,
           title: body.title || "New Conversation",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -311,6 +310,21 @@ class ApiClient {
       }
     }
 
+    // Add these cases inside the getMockResponse method
+    if (endpoint.startsWith("/conversations/") && method === "DELETE") {
+      return {
+        data: { success: true },
+        error: null,
+      } as ApiResponse<T>
+    }
+
+    if (endpoint.startsWith("/agents/") && method === "DELETE") {
+      return {
+        data: { success: true },
+        error: null,
+      } as ApiResponse<T>
+    }
+
     // Default fallback
     return {
       data: null,
@@ -348,6 +362,12 @@ class ApiClient {
     return this.request<Agent>(`/agents/${id}`, "PATCH", data)
   }
 
+  // Add this method after the updateAgent method
+
+  async deleteAgent(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/agents/${id}`, "DELETE")
+  }
+
   // Conversation methods
   async getConversations(userId: string): Promise<ApiResponse<Conversation[]>> {
     return this.request<Conversation[]>(`/conversations?user_id=${userId}`)
@@ -357,12 +377,20 @@ class ApiClient {
     return this.request<Conversation>(`/conversations/${id}`)
   }
 
-  async createConversation(data: { agent_id: string; title?: string , user_id: string}): Promise<ApiResponse<Conversation>> {
+  async createConversation(data: { agent_id?: string; title?: string; user_id?: string }): Promise<
+    ApiResponse<Conversation>
+  > {
     return this.request<Conversation>("/conversations", "POST", data)
   }
 
   async updateConversation(id: string, data: Partial<Conversation>): Promise<ApiResponse<Conversation>> {
     return this.request<Conversation>(`/conversations/${id}`, "PATCH", data)
+  }
+
+  // Add these methods to the ApiClient class after the updateConversation method
+
+  async deleteConversation(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/conversations/${id}`, "DELETE")
   }
 
   // Message methods
@@ -380,6 +408,7 @@ class ApiClient {
   }
 
   // Auth methods
+   // Auth methods
   // async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token: string }>> {
   //   const response = await this.request<{ user: User; token: string }>("/auth/login", "POST", credentials)
   //   if (response.data?.token) {
@@ -434,25 +463,38 @@ class ApiClient {
     return this.request<any>(`/documents/${id}`)
   }
 
-  async getDocumentsCategories(): Promise<ApiResponse<any>> {
-    return this.request<any>(`/documents/categories`)
-  }
-
   async createDocument(documentData: {
-    title: string
-    content: string
-    category?: string
-    metadata?: Record<string, any>
+    category: string
+    document: {
+      title: string
+      content: string
+      metadata?: Record<string, any>
+    }
   }): Promise<ApiResponse<any>> {
-    return this.request<any>("/documents", "POST", documentData)
+    const { category, document } = documentData
+    return this.request<any>(`/documents?category=${encodeURIComponent(category)}`, "POST", document)
   }
 
   async updateDocument(id: string, data: Partial<any>): Promise<ApiResponse<any>> {
     return this.request<any>(`/documents/${id}`, "PATCH", data)
   }
+  
+  async getDocumentsCategories(): Promise<ApiResponse<any>> {
+    return this.request<any>(`/documents/categories`)
+  }
 
   async deleteDocument(id: string): Promise<ApiResponse<any>> {
     return this.request<any>(`/documents/${id}`, "DELETE")
+  }
+
+  async authenticateWithAuth0(data: {
+    auth0Id: string
+    email: string
+    name: string
+    picture: string
+    token: string
+  }): Promise<ApiResponse<User>> {
+    return this.request<User>("/auth/auth0", "POST", data)
   }
 }
 

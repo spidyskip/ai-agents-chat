@@ -22,11 +22,22 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Plus, Edit } from "lucide-react"
+import { Loader2, Plus, Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import apiClient from "@/lib/api-client"
 import AgentDocumentReferences from "@/components/agent-document-references"
 import type { Agent } from "@/lib/types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function AgentsPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -43,9 +54,10 @@ export default function AgentsPage() {
   const [formData, setFormData] = useState({
     name: "",
     prompt: "",
-    model_name: "gpt-4o",
+    model_name: "gemini-2.0-flash",
     categories: "",
     keywords: "",
+    tools: ""
   })
 
   // Redirect to auth page if not logged in
@@ -95,6 +107,7 @@ export default function AgentsPage() {
       const { data, error } = await apiClient.createAgent({
         name: formData.name,
         prompt: formData.prompt,
+        agent_id: formData.name.toLowerCase().replace(/\s/g, "-"),
         model_name: formData.model_name,
         categories: formData.categories
           .split(",")
@@ -104,7 +117,10 @@ export default function AgentsPage() {
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
-        tools: [],
+        tools: formData.tools
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean),
       })
 
       if (error) {
@@ -122,9 +138,10 @@ export default function AgentsPage() {
         setFormData({
           name: "",
           prompt: "",
-          model_name: "gpt-4o",
+          model_name: "gemini-2.0-flash",
           categories: "",
           keywords: "",
+          tools: ""
         })
       }
     } catch (error) {
@@ -156,6 +173,10 @@ export default function AgentsPage() {
           .split(",")
           .map((k) => k.trim())
           .filter(Boolean),
+        tools: formData.tools
+          .split(",")
+          .map((k) => k.trim())
+          .filter(Boolean),
       })
 
       if (error) {
@@ -175,9 +196,10 @@ export default function AgentsPage() {
         setFormData({
           name: "",
           prompt: "",
-          model_name: "gpt-4o",
+          model_name: "gemini-2.0-flash",
           categories: "",
           keywords: "",
+          tools: "",
         })
       }
     } catch (error) {
@@ -200,6 +222,7 @@ export default function AgentsPage() {
       model_name: agent.model_name,
       categories: agent.categories?.join(", ") || "",
       keywords: agent.keywords?.join(", ") || "",
+      tools: agent.tools?.join(", ") || "",
     })
     setActiveTab("details")
   }
@@ -207,6 +230,36 @@ export default function AgentsPage() {
   const handleAgentUpdate = (updatedAgent: Agent) => {
     setAgents((prev) => prev.map((agent) => (agent.agent_id === updatedAgent.agent_id ? updatedAgent : agent)))
     setSelectedAgent(updatedAgent)
+  }
+
+  const handleDeleteAgent = async (agentId: string) => {
+    try {
+      const { error } = await apiClient.deleteAgent(agentId)
+
+      if (error) {
+        throw new Error(error)
+      }
+
+      // Remove the agent from the list
+      setAgents((prev) => prev.filter((agent) => agent.agent_id !== agentId))
+
+      // If the deleted agent is the selected one, clear it
+      if (selectedAgent?.agent_id === agentId) {
+        setSelectedAgent(null)
+      }
+
+      toast({
+        title: "Agent deleted",
+        description: "The agent has been permanently deleted.",
+      })
+    } catch (error) {
+      console.error("Error deleting agent:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete agent.",
+        variant: "destructive",
+      })
+    }
   }
 
   if (authLoading || isLoading) {
@@ -268,9 +321,6 @@ export default function AgentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -294,6 +344,18 @@ export default function AgentsPage() {
                     id="keywords"
                     value={formData.keywords}
                     onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                    placeholder="help, code, etc. (comma separated)"
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="keywords" className="text-right">
+                    Tools
+                  </Label>
+                  <Input
+                    id="tools"
+                    value={formData.tools}
+                    onChange={(e) => setFormData({ ...formData, tools: e.target.value })}
                     placeholder="help, code, etc. (comma separated)"
                     className="col-span-3"
                   />
@@ -334,6 +396,7 @@ export default function AgentsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead>Categories</TableHead>
+                  <TableHead>Tools</TableHead>
                   <TableHead>Documents</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -348,6 +411,15 @@ export default function AgentsPage() {
                         {agent.categories?.map((category, index) => (
                           <Badge key={index} variant="secondary">
                             {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {agent.tools?.map((tools, index) => (
+                          <Badge key={index} variant="secondary">
+                            {tools}
                           </Badge>
                         ))}
                       </div>
@@ -370,112 +442,152 @@ export default function AgentsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(agent)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[800px]">
-                          <DialogHeader>
-                            <DialogTitle>Edit Agent: {agent.name}</DialogTitle>
-                            <DialogDescription>
-                              Update the agent's configuration and document references.
-                            </DialogDescription>
-                          </DialogHeader>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(agent)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[800px]">
+                            <DialogHeader>
+                              <DialogTitle>Edit Agent: {agent.name}</DialogTitle>
+                              <DialogDescription>
+                                Update the agent's configuration and document references.
+                              </DialogDescription>
+                            </DialogHeader>
 
-                          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-                            <TabsList className="grid w-full grid-cols-2">
-                              <TabsTrigger value="details">Agent Details</TabsTrigger>
-                              <TabsTrigger value="documents">Document References</TabsTrigger>
-                            </TabsList>
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="details">Agent Details</TabsTrigger>
+                                <TabsTrigger value="documents">Document References</TabsTrigger>
+                              </TabsList>
 
-                            <TabsContent value="details" className="mt-4">
-                              <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-name" className="text-right">
-                                    Name
-                                  </Label>
-                                  <Input
-                                    id="edit-name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="col-span-3"
-                                  />
+                              <TabsContent value="details" className="mt-4">
+                                <div className="grid gap-4 py-4">
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-name" className="text-right">
+                                      Name
+                                    </Label>
+                                    <Input
+                                      id="edit-name"
+                                      value={formData.name}
+                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                      className="col-span-3"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-model" className="text-right">
+                                      Model
+                                    </Label>
+                                    <Select
+                                      value={formData.model_name}
+                                      onValueChange={(value) => setFormData({ ...formData, model_name: value })}
+                                    >
+                                      <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder="Select a model" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-categories" className="text-right">
+                                      Categories
+                                    </Label>
+                                    <Input
+                                      id="edit-categories"
+                                      value={formData.categories}
+                                      onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
+                                      placeholder="General, Programming, etc. (comma separated)"
+                                      className="col-span-3"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-keywords" className="text-right">
+                                      Keywords
+                                    </Label>
+                                    <Input
+                                      id="edit-keywords"
+                                      value={formData.keywords}
+                                      onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                                      placeholder="help, code, etc. (comma separated)"
+                                      className="col-span-3"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit-tools" className="text-right">
+                                      Tools
+                                    </Label>
+                                    <Input
+                                      id="edit-tools"
+                                      value={formData.tools}
+                                      onChange={(e) => setFormData({ ...formData, tools: e.target.value })}
+                                      placeholder="search, calculator, etc. (comma separated)"
+                                      className="col-span-3"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-start gap-4">
+                                    <Label htmlFor="edit-prompt" className="text-right">
+                                      Prompt
+                                    </Label>
+                                    <Textarea
+                                      id="edit-prompt"
+                                      value={formData.prompt}
+                                      onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                                      placeholder="Enter the system prompt for this agent"
+                                      className="col-span-3"
+                                      rows={5}
+                                    />
+                                  </div>
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-model" className="text-right">
-                                    Model
-                                  </Label>
-                                  <Select
-                                    value={formData.model_name}
-                                    onValueChange={(value) => setFormData({ ...formData, model_name: value })}
-                                  >
-                                    <SelectTrigger className="col-span-3">
-                                      <SelectValue placeholder="Select a model" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
-                                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                <div className="flex justify-end">
+                                  <Button type="submit" onClick={handleUpdateAgent} disabled={isEditing}>
+                                    {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Update Agent
+                                  </Button>
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-categories" className="text-right">
-                                    Categories
-                                  </Label>
-                                  <Input
-                                    id="edit-categories"
-                                    value={formData.categories}
-                                    onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
-                                    placeholder="General, Programming, etc. (comma separated)"
-                                    className="col-span-3"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-keywords" className="text-right">
-                                    Keywords
-                                  </Label>
-                                  <Input
-                                    id="edit-keywords"
-                                    value={formData.keywords}
-                                    onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
-                                    placeholder="help, code, etc. (comma separated)"
-                                    className="col-span-3"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-start gap-4">
-                                  <Label htmlFor="edit-prompt" className="text-right">
-                                    Prompt
-                                  </Label>
-                                  <Textarea
-                                    id="edit-prompt"
-                                    value={formData.prompt}
-                                    onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                                    placeholder="Enter the system prompt for this agent"
-                                    className="col-span-3"
-                                    rows={5}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex justify-end">
-                                <Button type="submit" onClick={handleUpdateAgent} disabled={isEditing}>
-                                  {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                  Update Agent
-                                </Button>
-                              </div>
-                            </TabsContent>
+                              </TabsContent>
 
-                            <TabsContent value="documents" className="mt-4">
-                              {selectedAgent && (
-                                <AgentDocumentReferences agent={selectedAgent} onUpdate={handleAgentUpdate} />
-                              )}
-                            </TabsContent>
-                          </Tabs>
-                        </DialogContent>
-                      </Dialog>
+                              <TabsContent value="documents" className="mt-4">
+                                  {selectedAgent && (
+                                    <AgentDocumentReferences agent={selectedAgent} onUpdate={handleAgentUpdate} />
+                                  )}
+                              </TabsContent>
+                            </Tabs>
+                          </DialogContent>
+                        </Dialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete the agent "{agent.name}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteAgent(agent.agent_id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

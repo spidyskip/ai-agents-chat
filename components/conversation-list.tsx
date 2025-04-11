@@ -1,8 +1,19 @@
 "use client"
 
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import RenameDialog from "./rename-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import type { Conversation } from "@/lib/types"
 
 interface ConversationListProps {
@@ -10,6 +21,7 @@ interface ConversationListProps {
   currentConversation: Conversation | null
   onSelectConversation: (conversation: Conversation) => void
   onRenameConversation: (id: string, newTitle: string) => Promise<void>
+  onDeleteConversation: (id: string) => Promise<void>
 }
 
 export default function ConversationList({
@@ -17,6 +29,7 @@ export default function ConversationList({
   currentConversation,
   onSelectConversation,
   onRenameConversation,
+  onDeleteConversation,
 }: ConversationListProps) {
   // Ensure conversations is always an array
   const conversationList = Array.isArray(conversations) ? conversations : []
@@ -43,8 +56,33 @@ export default function ConversationList({
             <MessageSquare size={18} className="mr-2 text-primary" />
             <div className="truncate">{conversation.title}</div>
           </button>
-          <div className="pr-2">
+          <div className="pr-2 flex">
             <RenameDialog conversation={conversation} onRename={onRenameConversation} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive">
+                  <Trash2 size={16} />
+                  <span className="sr-only">Delete conversation</span>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this conversation? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDeleteConversation(conversation.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       ))}

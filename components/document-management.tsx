@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { FileText, Upload, Trash2, Search, Loader2, FolderPlus, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -29,6 +28,7 @@ interface Document {
   title: string
   content: string
   category: string
+  content_length?: string
   created_at: string
   updated_at: string
   metadata?: Record<string, any>
@@ -44,9 +44,12 @@ export default function DocumentManagement() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [newDocument, setNewDocument] = useState({
-    title: "",
-    content: "",
     category: "general",
+    document: {
+      title: "",
+      content: "",
+      metadata: {}, // Add any metadata if needed
+    },
   })
   const [uploadCategory, setUploadCategory] = useState("general")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -63,7 +66,6 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocumentsCategories()
       if (response.error) {
         throw new Error(response.error)
-
       }
       setCategories(response.data.categories || [])
 
@@ -85,7 +87,6 @@ export default function DocumentManagement() {
       const response = await apiClient.getDocuments()
       if (response.error) {
         throw new Error(response.error)
-
       }
       setDocuments(response.data || [])
     } catch (error) {
@@ -116,8 +117,12 @@ export default function DocumentManagement() {
 
     try {
       const response = await apiClient.createDocument({
-            title: newDocument.title,
-            content: newDocument.content,
+        category: newDocument.category,
+        document: {
+          title: newDocument.title,
+          content: newDocument.content,
+          metadata: {}, 
+        }
       })
 
       if (!response.ok) {
@@ -250,6 +255,12 @@ export default function DocumentManagement() {
     return new Date(dateString).toLocaleDateString()
   }
 
+   // Convert bytes to megabytes
+   const formatBytesToMB = (bytes: string) => {
+    const mb = parseInt(bytes, 10) / (1024 * 1024)
+    return `${mb.toFixed(2)} MB`
+  }
+
   // Get category badge color
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
@@ -310,137 +321,138 @@ export default function DocumentManagement() {
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Create document button */}
-              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    Create Document
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Document</DialogTitle>
-                    <DialogDescription>Add a new document that can be used by AI agents</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="title" className="text-right">
-                        Title
-                      </Label>
-                      <Input
-                        id="title"
-                        value={newDocument.title}
-                        onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })}
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="category" className="text-right">
-                        Category
-                      </Label>
-                      <Select
-                        value={newDocument.category}
-                        onValueChange={(value) => setNewDocument({ ...newDocument, category: value })}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.length > 0 ? (
-                            categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <>
-                              <SelectItem value="general">General</SelectItem>
-                              <SelectItem value="knowledge">Knowledge Base</SelectItem>
-                              <SelectItem value="instructions">Instructions</SelectItem>
-                              <SelectItem value="reference">Reference</SelectItem>
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="content" className="text-right">
-                        Content
-                      </Label>
-                      <Textarea
-                        id="content"
-                        value={newDocument.content}
-                        onChange={(e) => setNewDocument({ ...newDocument, content: e.target.value })}
-                        placeholder="Enter document content"
-                        className="col-span-3"
-                        rows={10}
-                      />
-                    </div>
+            </div>
+          </div>
+          <div className="flex gap-2 mb-6">
+            {/* Create document button */}
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  Create Document
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Document</DialogTitle>
+                  <DialogDescription>Add a new document that can be used by AI agents</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="title" className="text-right">
+                      Title
+                    </Label>
+                    <Input
+                      id="title"
+                      value={newDocument.title}
+                      onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
-                  <DialogFooter>
-                    <Button type="submit" onClick={handleAddDocument} disabled={isUploading}>
-                      {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Add Document
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              {/* Upload file button with category selection */}
-              <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload File
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                    <DialogDescription>Upload a file and select a category for it</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="upload-category" className="text-right">
-                        Category
-                      </Label>
-                      <Select value={uploadCategory} onValueChange={setUploadCategory}>
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category" className="text-right">
+                      Category
+                    </Label>
+                    <Select
+                      value={newDocument.category}
+                      onValueChange={(value) => setNewDocument({ ...newDocument, category: value })}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.length > 0 ? (
+                          categories.map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="file-upload" className="text-right">
-                        File
-                      </Label>
-                      <Input
-                        ref={fileInputRef}
-                        id="file-upload"
-                        type="file"
-                        accept=".txt,.md,.json,.csv"
-                        className="col-span-3"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="knowledge">Knowledge Base</SelectItem>
+                            <SelectItem value="instructions">Instructions</SelectItem>
+                            <SelectItem value="reference">Reference</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-                      Cancel
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="content" className="text-right">
+                      Content
+                    </Label>
+                    <Textarea
+                      id="content"
+                      value={newDocument.content}
+                      onChange={(e) => setNewDocument({ ...newDocument, content: e.target.value })}
+                      placeholder="Enter document content"
+                      className="col-span-3"
+                      rows={10}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" onClick={handleAddDocument} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Add Document
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Upload file button with category selection */}
+            <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload File
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Document</DialogTitle>
+                  <DialogDescription>Upload a file and select a category for it</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="upload-category" className="text-right">
+                      Category
+                    </Label>
+                    <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="file-upload" className="text-right">
+                      File
+                    </Label>
+                    <Input
+                      ref={fileInputRef}
+                      id="file-upload"
+                      type="file"
+                      accept=".txt,.md,.json,.csv"
+                      className="col-span-3"
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {isLoading ? (
@@ -448,39 +460,43 @@ export default function DocumentManagement() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredDocuments.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDocuments.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <FileText className="mr-2 h-4 w-4 text-primary" />
-                        {doc.title}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getCategoryColor(doc.category)}>
-                        {doc.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(doc.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredDocuments.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <FileText className="mr-2 h-4 w-4 text-primary" />
+                          {doc.title}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getCategoryColor(doc.category)}>
+                          {doc.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatBytesToMB(doc.content_length)}</TableCell>
+                      <TableCell>{formatDate(doc.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteDocument(doc)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery || selectedCategory !== "all"
@@ -493,4 +509,3 @@ export default function DocumentManagement() {
     </div>
   )
 }
-

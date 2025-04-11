@@ -61,28 +61,8 @@ export default function PersonalInfoTab({ user }: PersonalInfoTabProps) {
     }
   }
 
-  const handleAvatarChange = async (avatarSrc: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      return true
-    } catch (error) {
-      console.error("Error updating avatar:", error)
-      return false
-    }
-  }
-
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
-          <CardDescription>Choose an avatar for your profile</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AvatarSelector user={user} onAvatarChange={handleAvatarChange} />
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

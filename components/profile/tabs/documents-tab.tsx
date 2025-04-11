@@ -239,8 +239,8 @@ export default function DocumentsTab({ user }: DocumentsTabProps) {
         <CardDescription>Manage your documents and knowledge base</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search documents..."
@@ -400,4 +400,3 @@ export default function DocumentsTab({ user }: DocumentsTabProps) {
     </Card>
   )
 }
-

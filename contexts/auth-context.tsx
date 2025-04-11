@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<boolean>
   register: (data: RegisterData) => Promise<boolean>
   logout: () => void
+  updateUserProfile: (updates: Partial<User>) => Promise<boolean> // Add this line
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -128,7 +129,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>{children}</AuthContext.Provider>
+  const updateUserProfile = async (updates: Partial<User>): Promise<boolean> => {
+    if (!user) return false
+    setIsLoading(true)
+    try {
+      const { data, error } = await apiClient.updateUserProfile(updates)
+      if (error || !data) {
+        toast({
+          title: "Update failed",
+          description: error || "An unknown error occurred",
+          variant: "destructive",
+        })
+        return false
+      }
+      setUser(data.user)
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      })
+      return true
+    } catch (error) {
+      console.error("Update profile error:", error)
+      toast({
+        title: "Update failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserProfile }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
